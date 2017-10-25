@@ -1,0 +1,144 @@
+Creating an .htaccess File
+
+Depending on your install, you may not have an .htaccess file so before you can think about editing it, you may need to create one. You can either use your favorite text editor to create one or do it directly in cPanel.
+
+Create and upload a new file and name it .htaccess, or click the File button at the top left of the File Manager in cPanel to create a blank file named .htaccess.
+
+If your server doesn’t allow you to do this, create a file called htaccess.txt instead, then rename the file to .htaccess once it’s uploaded to your site.
+
+Since all WordPress installs have pretty permalinks set by default since version 4.2, it’s best to side on the err of caution and include the code that’s default for .htaccess files in the newer versions of WordPress instead of creating a blank file.
+
+Here’s the default code you should include for single installs of WordPress:
+
+# BEGIN WordPress
+<IfModule mod_rewrite>
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+
+For Multisite networks installed with sub-directories using version 3.5 or higher, use the following code instead:
+
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+
+# add a trailing slash to /wp-admin
+RewriteRule ^([_0-9a-zA-Z-]+/)?wp-admin$ $1wp-admin/ [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^([_0-9a-zA-Z-]+/)?(wp-(content|admin|includes).*) $2 [L]
+RewriteRule ^([_0-9a-zA-Z-]+/)?(.*\.php)$ $2 [L]
+RewriteRule . index.php [L]
+
+If your Multisite is installed with sub-domains and the version you’re using is 3.5 or higher, use the code below instead of the options above:
+
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+
+# add a trailing slash to /wp-admin
+RewriteRule ^wp-admin$ wp-admin/ [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^(wp-(content|admin|includes).*) $1 [L]
+RewriteRule ^(.*\.php)$ $1 [L]
+RewriteRule . index.php [L]
+
+For any other versions of WordPress, check out the WordPress Codex’s .htaccess page for details on the code you should include in your file.
+
+When you’re creating a new .htaccess file, it’s important that you set a file permission of 644 to protect it from potential attacks. For details on how to do this, check out one of our other posts Understanding File Permissions and Using Them to Secure Your Site.
+
+Where to Add Your Changes
+
+When you’re editing your file, it’s important to note that lines beginning with a hashtag are comments and aren’t included in the .htaccess rule. When you’re adding rules, it’s crucial that you include them either above or below the default WordPress rule explained above.
+
+You shouldn’t add or edit anything between the lines # BEGIN WordPress and # END WordPress. For Multisite networks, the same principle applies, although, there aren’t any comments at the beginning and end as there are for single installs.
+
+If you were to make any changes, it’s likely that it would be overwritten so it’s best to just stay out of its way and let WordPress do its thing.
+
+Generally speaking, adding rules below the default WordPress lines keeps things more organized and adds a bit of clarity as to what your edits are as opposed to WordPress’ code. It may also be helpful to add your own comments to any additions you make to further organize your .htaccess file.
+
+At the end of the day, it’s up to you and what would work best for your needs.
+
+There’s also a handy .htaccess to Nginx converter you can use to adjust the tips later on in the article for use with – you guessed it – Nginx.
+
+Editing Your .htaccess File
+
+There are many ways you can choose to edit your .htaccess file and one of them is to do it directly in cPanel. Most people find this to be the easiest method, but I won’t stop you from using the method that’s your favorite.
+
+No matter which method you choose, it may be helpful to note that you refreshing your site after you save an edit to your file will allow you to check whether your edits break your site. If they do, you can immediately restore the file and try again. If everything works as it should, then you’re good to go and you can continue making edits.
+
+Once you’re logged into cPanel, go to Files > File Manager and choose to show hidden files as described earlier. Go to the root of your site and click once on your .htaccess file that’s listed. Click Edit in the navigation at the top of the page to make your changes.
+
+Don’t forget to click Save before exiting so your changes aren’t lost.
+
+You can also choose to edit files using FTP. You can find the details on how to do this by checking out How to Use FTP Properly with WordPress.
+
+You can also choose to use SSH to makes changes as well. You can check out A Quick Guide to the Terminal and Command Line Prompt for WordPress for details on how to use an SSH client.
+
+SSH commands are not the same for every kind of server so consult your server type’s documentation for the commands you need to use.
+
+Now you’re ready to tighten your site’s security with the tips below. Let’s get to it.
+
+1. Protecting Important Files
+
+One of the best edits you can make is to protect your .htaccess file along with your error logs, wp-config.php and php.ini files. Once you make the following change, attempts to access these files are denied.
+
+<FilesMatch "^.*(error_log|wp-config\.php|php.ini|\.[hH][tT][aApP].*)$">
+Order deny,allow
+Deny from all
+</FilesMatch>
+
+Be sure to check your files and see if you have one named php.ini because you may not. Instead, you may have one called php5.ini. If this is the case, replace php.ini with php5.ini in the above rule.
+
+2. Restrict Access to the Admin
+
+You can also restrict access to the admin dashboard and login page by adding the rules below if you use a static IP address:
+ErrorDocument 401 /path-to-your-site/index.php?error=404
+ErrorDocument 403 /path-to-your-site/index.php?error=404
+
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{REQUEST_URI} ^(.*)?wp-login\.php(.*)$ [OR]
+RewriteCond %{REQUEST_URI} ^(.*)?wp-admin$
+RewriteCond %{REMOTE_ADDR} !^IP Address One$
+RewriteCond %{REMOTE_ADDR} !^IP Address Two$
+RewriteCond %{REMOTE_ADDR} !^IP Address Three$
+RewriteRule ^(.*)$ - [R=403,L]
+</IfModule>
+The first two lines redirect unauthorized IP addresses to your 404 error page. This also helps you resolve any redirect loops so your site doesn’t look like it’s down. Just be sure to edit both instances of /path-to-your-site/ to the real path of your site.
+
+Also, replace IP Address One, IP Address Two and IP Address Three with the actual IP addresses you want to have access to these pages. If you only want to add one address, omit lines nine and 10. You can also repeat line 10 as many times as you would like and replace each
+
+You can also repeat line 10 as many times as you would like and replace each IP Address Three with the real IP address you want to whitelist.
+
+If you or any of your other users have dynamic IP addresses, a Multisite network or multiple users in your network that need to log in, you can use the following rule instead:
+ErrorDocument 401 /path-to-your-site/index.php?error=404
+ErrorDocument 403 /path-to-your-site/index.php?error=404
+
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{REQUEST_METHOD} POST
+RewriteCond %{HTTP_REFERER} !^http://(.*)?your-site.com [NC]
+RewriteCond %{REQUEST_URI} ^(.*)?wp-login\.php(.*)$ [OR]
+RewriteCond %{REQUEST_URI} ^(.*)?wp-admin$
+RewriteRule ^(.*)$ - [F]
+</IfModule>
+
+Don’t forget to switch /path-to-your-site/ in lines one and two to the real path to your site as well as change your-site.com with your actual domain.
+
+Many hackers use bots to try and access the admin dashboard or to log in externally. By adding this to your .htaccess file, you’re only letting people who manually enter your site into their browser’s address bar to have access to these pages.
+
+While it won’t block hackers that try to manually guess your users’ login details, in most cases, it still makes a huge difference and significantly lowers the amount of brute force attacks you receive.
+
+Source> 
+https://premium.wpmudev.org/blog/htaccess/
+
