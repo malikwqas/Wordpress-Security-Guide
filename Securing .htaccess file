@@ -11,7 +11,7 @@ Since all WordPress installs have pretty permalinks set by default since version
 Here’s the default code you should include for single installs of WordPress:
 
 # BEGIN WordPress
-<IfModule mod_rewrite>
+<IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
 RewriteRule ^index\.php$ - [L]
@@ -19,6 +19,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.php [L]
 </IfModule>
+# END WordPress
 
 For Multisite networks installed with sub-directories using version 3.5 or higher, use the following code instead:
 
